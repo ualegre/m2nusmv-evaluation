@@ -7,9 +7,9 @@ import java.util.Random;
 
 public class Main {
 	private Random randomGenerator;
-	private final int repeat   = 1;
+	private final int repeat   = 10;
 	private final int antecedent_no =2;
-	private final int state_no = ((antecedent_no +1) * 2);
+	private final int state_no = ((antecedent_no +1) * 2)*repeat;
 	private final int str_no   = 1;
 	private final int ntr_no   = 1;
 	private final int sip_no   = 1;
@@ -71,34 +71,34 @@ public class Main {
 		writer.append("ASSIGN\n");
 		writer.append("\tinit(time) := 0; \n");	
 		writer.append("\n");
-		writeSTR(antecedent_no);
-		writer.append("\n");
-		writeNTR(((antecedent_no*2)+1));
-		writer.append("\n");
+		for(int i=0;i<repeat;i++){ writeSTR(antecedent_no,i);
+		writer.append("\n");}
+		for(int i=0;i<repeat;i++){writeNTR(((antecedent_no*2)+1),i);
+		writer.append("\n");}
 		writer.append("\tnext(time) := case \r\n\t\t\t\t\t (time < "+max_iteration+") : time+1;\r\n\t\t\t\t\t TRUE : "+max_iteration+";\r\n\t\t\t\t  esac;\n");
 	}
 
-	private void writeNTR(int unit) throws IOException {
-		writer.append("\tnext(state"+unit+") := case\n");	
+	private void writeNTR(int unit, int number) throws IOException {
+		writer.append("\tnext(state"+unit+"_"+number+") := case\n");	
 		for(int i=antecedent_no+1; i < unit;i++){
-			if(i==(antecedent_no+1)) writer.append("\t\t\t\t\t\t(state"+i+" = "+getRandomStatus()+")");	
-			else writer.append(" & (state"+i+" = "+getRandomStatus()+")");
+			if(i==(antecedent_no+1)) writer.append("\t\t\t\t\t\t(state"+i+"_"+number+" = "+getRandomStatus()+")");	
+			else writer.append(" & (state"+i+"_"+number+" = "+getRandomStatus()+")");
 		}
 		writer.append(": "+getRandomStatus()+";\n");
-		writer.append("\t\t\t\t\t\tTRUE : state"+unit+";\n");
+		writer.append("\t\t\t\t\t\tTRUE : state"+unit+"_"+number+";\n");
 		writer.append("\t\t\t\t    esac;\n");
 	}
 
-	private void writeSTR(int unit) throws IOException {
-		writer.append("\tstate"+unit+" := case\n");	
+	private void writeSTR(int unit, int number) throws IOException {
+		writer.append("\tstate"+unit+"_"+number+" := case\n");	
 		for(int i=0; i < unit;i++){
-			if(i==0) writer.append("\t\t\t\t(state"+i+" = "+getRandomStatus()+")");	
-			else writer.append(" & (state"+i+" = "+getRandomStatus()+")");
+			if(i==0) writer.append("\t\t\t\t(state"+i+"_"+number+" = "+getRandomStatus()+")");	
+			else writer.append(" & (state"+i+"_"+number+" = "+getRandomStatus()+")");
 		}
 		writer.append(": "+getRandomStatus()+";\n");
-		writer.append("\t\t\t\tTRUE : state"+unit+"_aux;\n");
+		writer.append("\t\t\t\tTRUE : state"+unit+"_"+number+"_aux;\n");
 		writer.append("\t\t\t  esac;\n\n");
-		writer.append("\tnext(state"+unit+"_aux) := state"+unit+";\n");
+		writer.append("\tnext(state"+unit+"_"+number+"_aux) := state"+unit+"_"+number+";\n");
 	}
 	
 	private String getRandomStatus(){
@@ -110,22 +110,22 @@ public class Main {
 	private void writeVariables() throws IOException {
 		writer.append("VAR\n");
 		writer.append("\ttime : 0.."+max_iteration+"; \n\n");
-	    writeStateVariables();
+	    for(int i=0;i<repeat;i++) writeStateVariables(i);
 	    writer.append("\n");
-	    writeAuxiliaryStateVariables();
+	    for(int i=0;i<repeat;i++) writeAuxiliaryStateVariables(i);
 	    writer.append("\n");
 	}
 
-	private void writeStateVariables() throws IOException {
+	private void writeStateVariables(int number) throws IOException {
 		for(int i=0;i<state_no;i++)
-		    writer.append("\tstate"+i+" : boolean; \n");
+		    writer.append("\tstate"+i+"_"+number+" : boolean; \n");
 				
 	}
 	
-	private void writeAuxiliaryStateVariables() throws IOException {
+	private void writeAuxiliaryStateVariables(int number) throws IOException {
 		int unit = antecedent_no;
 		while(unit < state_no){
-		    writer.append("\tstate"+unit+"_aux : boolean; \n");
+		    writer.append("\tstate"+unit+"_"+number+"_aux : boolean; \n");
 		    unit = unit + (antecedent_no+1);
 		}
 				
