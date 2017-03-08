@@ -58,7 +58,11 @@ public class Main {
 	
 	public void write() throws IOException {
 	    writeMainModule();
-
+	    writer.append("\n");
+	    if(sip_no > 0) writeStrongImmediatePastModule();
+	    if(wip_no > 0) writeWeakImmediatePastModule();
+	    if(sap_no > 0) writeStrongAbsolutePastModule();
+	    if(wap_no > 0) writeWeakAbsolutePastModule();
 	}
 
 	private void writeMainModule() throws IOException {
@@ -71,10 +75,8 @@ public class Main {
 		writer.append("ASSIGN\n");
 		writer.append("\tinit(time) := 0; \n");	
 		writer.append("\n");
-		for(int i=0;i<repeat;i++){ writeSTR(antecedent_no,i);
-		writer.append("\n");}
-		for(int i=0;i<repeat;i++){writeNTR(((antecedent_no*2)+1),i);
-		writer.append("\n");}
+		for(int i=0;i<repeat;i++) writeSTR(antecedent_no,i);
+		for(int i=0;i<repeat;i++) writeNTR(((antecedent_no*2)+1),i);
 		writer.append("\tnext(time) := case \r\n\t\t\t\t\t (time < "+max_iteration+") : time+1;\r\n\t\t\t\t\t TRUE : "+max_iteration+";\r\n\t\t\t\t  esac;\n");
 	}
 
@@ -86,7 +88,7 @@ public class Main {
 		}
 		writer.append(": "+getRandomStatus()+";\n");
 		writer.append("\t\t\t\t\t\tTRUE : state"+unit+"_"+number+";\n");
-		writer.append("\t\t\t\t    esac;\n");
+		writer.append("\t\t\t\t    esac;\n\n");
 	}
 
 	private void writeSTR(int unit, int number) throws IOException {
@@ -98,7 +100,7 @@ public class Main {
 		writer.append(": "+getRandomStatus()+";\n");
 		writer.append("\t\t\t\tTRUE : state"+unit+"_"+number+"_aux;\n");
 		writer.append("\t\t\t  esac;\n\n");
-		writer.append("\tnext(state"+unit+"_"+number+"_aux) := state"+unit+"_"+number+";\n");
+		writer.append("\tnext(state"+unit+"_"+number+"_aux) := state"+unit+"_"+number+";\n\n");
 	}
 	
 	private String getRandomStatus(){
@@ -135,5 +137,19 @@ public class Main {
 	    writer.close();
 	}
 	
+	private void writeStrongImmediatePastModule() throws IOException{
+		writer.append("MODULE strong_immediate_past(state,bound)\r\nVAR\r\n  counter : 0..bound;\r\n  live  : boolean;\r\n  \r\nASSIGN\r\n  init(counter) := 0;\r\n  \r\n  live :=\t case\r\n\t\t  \t\t(counter = bound): TRUE;\r\n\t\t  \t\tTRUE: FALSE;\r\n\t\t     esac;\r\n  \r\n  next(counter) :=  case\r\n\t\t  \t\t\t\t(state=TRUE & counter < bound) : counter+1;\r\n\t\t\t\t\t\t(state=TRUE & counter = bound) : bound;\r\n\t\t  \t\t\t\tTRUE: 0;\r\n\t\t\t\t    esac;\n\n\n");
+	}
+	
+	private void writeWeakImmediatePastModule() throws IOException{
+		writer.append("MODULE weak_immediate_past(state,bound)\r\nVAR\r\n  counter  : 0..bound;\r\n  live\t: boolean;\r\n  live_aux : boolean;\r\n  \r\nASSIGN\r\n  init(counter) := 0;  \r\n  init(live_aux) := FALSE;\r\n  \r\n  live := case\r\n\t\t\t\t(state=TRUE)  : TRUE;\r\n\t\t\t\t(state=FALSE) & (counter = bound) : FALSE;\r\n\t\t\t\tTRUE: live_aux;\r\n\t\t  esac;\r\n\t\t  \r\n  next(live_aux) := live;\t  \r\n\t\t  \r\n  next(counter) := \tcase\r\n\t\t\t\t\t\t(state = TRUE) : 0;\r\n\t\t  \t\t\t\t(live_aux=TRUE) & (counter < bound) : counter+1;\r\n\t\t  \t\t\t\tTRUE: 0;\r\n\t\t\t\t    esac;\t\n\n\n");
+	}
 
+	private void writeStrongAbsolutePastModule() throws IOException{
+		writer.append("MODULE strong_absolute_past(state,low_bound,upp_bound,t)\r\nVAR\r\n  veredict\t : boolean;\r\n  veredict_aux  : boolean;\r\n  live \t\t\t: boolean;\r\n  \r\nASSIGN \r\n  init(veredict_aux) := TRUE;\r\n  init(live) := FALSE;\r\n  \r\n  veredict := case\r\n\t\t\t\t((state=FALSE) & (t >= low_bound) & ( t <= upp_bound))  : FALSE;\r\n\t\t\t\tTRUE: veredict_aux;\r\n\t\t\t  esac;  \r\n\n  next(veredict_aux) := veredict;\t  \r\n\n  next(live) := \tcase\r\n\t\t\t\t\t\t(t >= upp_bound) : veredict;\r\n\t\t  \t\t\t\tTRUE: FALSE;\r\n\t\t\t\t\tesac;\n\n\n");
+	}
+	
+	private void writeWeakAbsolutePastModule() throws IOException{
+		writer.append("MODULE weak_absolute_past(state,low_bound,upp_bound,t)\r\nVAR\r\n  veredict\t : boolean;\r\n  veredict_aux  : boolean;\r\n  live \t\t\t: boolean;\r\n  \r\nASSIGN\r\n  init(veredict_aux) := FALSE;\r\n  init(live) := FALSE;\r\n  \r\n  veredict := case\r\n\t\t\t\t(state=TRUE) & (t >= low_bound) & ( t <= upp_bound)  : TRUE;\r\n\t\t\t\tTRUE: veredict_aux;\r\n\t\t\t  esac;  \r\n\n  next(veredict_aux) := veredict;\t  \r\n\n  next(live) := \tcase\r\n\t\t\t\t\t\t(upp_bound >= t) : veredict;\r\n\t\t  \t\t\t\tTRUE: FALSE;\r\n\t\t\t\t    esac;\n\n\n");
+	}
 }
