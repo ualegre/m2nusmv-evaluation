@@ -121,16 +121,28 @@ public abstract class GenericGenerator {
 	protected abstract void writeVariables() throws IOException;
 
 	protected void writeTemporalOperatorVariables(int number) throws IOException {
-		for(int i=0;i<sip_no;i++)
-		    writer.append("\tsip"+i+"_"+number+" : strong_immediate_past(state0_"+number+","+immediate_operator_length+"); \n");
-		for(int i=0;i<wip_no;i++)
-		    writer.append("\twip"+i+"_"+number+" : boolean; \n");
-		for(int i=0;i<sap_no;i++)
-		    writer.append("\tsap"+i+"_"+number+" : boolean; \n");
-		for(int i=0;i<wap_no;i++)
-		    writer.append("\twap"+i+"_"+number+" : boolean; \n");
-		
+		int stateNumberCounter = 0;
+
+		stateNumberCounter = writeOperator("sip","strong_immediate_past",Integer.toString(immediate_operator_length), stateNumberCounter, number, sip_no);
+		stateNumberCounter = writeOperator("wip","weak_immediate_past",Integer.toString(immediate_operator_length), stateNumberCounter, number,  wip_no);
+		stateNumberCounter = writeOperator("sap","strong_absolute_past",absolute_operator_start+","+absolute_operator_end+",time", stateNumberCounter, number,  sap_no);	
+		writeOperator("wap","weak_absolute_past",absolute_operator_start+","+absolute_operator_end+",time", stateNumberCounter, number,  sap_no);	
+		writer.append("\n");
 	}
+
+	private int writeOperator(String operatorName, String operatorType, String bound, int stateNumberCounter, int number, int operatorNumber) throws IOException {
+		int auxStateNumberCounter = stateNumberCounter;
+		
+		for(int i=0;i<operatorNumber;i++){
+		    writer.append("\t"+operatorName+i+"_"+number+" : "+operatorType+"(state"+auxStateNumberCounter+"_"+number+","+bound+"); \n");
+		
+			if(antecedent_no > auxStateNumberCounter) 
+				auxStateNumberCounter++;
+		}
+		return auxStateNumberCounter;
+	}
+
+
 
 	protected void writeStateVariables(int number) throws IOException {
 		for(int i=0;i<state_no;i++)

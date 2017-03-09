@@ -10,7 +10,7 @@ public class ProportionalGenerator extends GenericGenerator{
 	
 	@Override
 	protected void initialiseValues() {
-		repeat   = 10;
+		repeat   = 5;
 		antecedent_no =2;
 		state_no = ((antecedent_no +1) * 2)*repeat;
 		str_no   = 1;
@@ -51,11 +51,11 @@ public class ProportionalGenerator extends GenericGenerator{
 		writer.append("VAR\n");
 		writer.append("\ttime : 0.."+max_iteration+"; \n\n");
 	    for(int i=0;i<repeat;i++) writeStateVariables(i);
-	    writer.append("\n");
+	    	writer.append("\n");
 	    for(int i=0;i<repeat;i++) writeAuxiliaryStateVariables(i);
-	    writer.append("\n");
+	    	writer.append("\n\n");
 	    for(int i=0;i<repeat;i++) writeTemporalOperatorVariables(i);
-	    writer.append("\n");	
+	    	writer.append("\n\n");	
 		
 	}
 
