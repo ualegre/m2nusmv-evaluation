@@ -2,62 +2,18 @@ package edu.casetools.dcase.m2nusmv.evaluation.generators;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Random;
 
 
-public abstract class GenericGenerator {
-
-	protected int repeat;
-	protected int antecedent_no;
-	protected int state_no;
-	protected int str_no;
-	protected int ntr_no;
-	protected int sip_no;
-	protected int wip_no;	
-	protected int immediate_operator_length;
-	protected int sap_no;
-	protected int wap_no;
-	protected int absolute_operator_start;
-	protected int absolute_operator_length;
-	protected int absolute_operator_end;
-	protected int max_upp_bound;
-	protected int max_iteration; 
-	protected int length;
+public class ModelGenerator {
 	
 	protected FileWriter filestream;
 	protected BufferedWriter writer;
-	protected Random randomGenerator;
+	protected Configurations configs;
 	
-	protected String name;
-	
-	public GenericGenerator() throws IOException{
-		initialiseValues();
-		initialiseName();
-		printSetup();
-		filestream = new FileWriter(name);
+	public ModelGenerator(Configurations configs) throws IOException{
+		filestream = new FileWriter(configs.getFilename());
 	    writer = new BufferedWriter(filestream);
-		randomGenerator = new Random();
- 
-	}
-
-	protected abstract void initialiseValues();
-	protected abstract void initialiseName();
-
-	private void printSetup() throws IOException {
-	    print("MAX_ITERATION: "+max_iteration+"\n");
-	    print("STATE_NO: "+state_no+"\n");
-	    print("STR_NO: "+str_no+"\n");
-	    print("NTR_NO: "+ntr_no+"\n");
-	    print("Operator Strong Immediate Past: "+sip_no+"\n");
-	    print("Operator Weak Immediate Past: "+wip_no+"\n");
-	    print("Immediate Operator length: "+immediate_operator_length+"\n");
-	    print("Operator Strong Absolute Past: "+sap_no+"\n");
-	    print("Operator Weak Absolute Past: "+wap_no+"\n");
-	    print("Absolute Operator length: "+absolute_operator_length+"\n");	   
-	}
-	
-	private void print(String s){
-		System.out.println(s);
+		this.configs = configs;
 	}
 	
 	public void generate() throws IOException{
@@ -69,13 +25,13 @@ public abstract class GenericGenerator {
 	private void write() throws IOException {
 	    writeMainModule();
 	    writer.append("\n");
-	    if(sip_no > 0) 
+	    if(configs.getSip_no() > 0) 
 	    	writeStrongImmediatePastModule();
-	    if(wip_no > 0) 
+	    if(configs.getWip_no() > 0) 
 	    	writeWeakImmediatePastModule();
-	    if(sap_no > 0) 
+	    if(configs.getSap_no() > 0) 
 	    	writeStrongAbsolutePastModule();
-	    if(wap_no > 0) 
+	    if(configs.getWap_no() > 0) 
 	    	writeWeakAbsolutePastModule();
 	}
 
@@ -83,18 +39,94 @@ public abstract class GenericGenerator {
 		writer.append("MODULE main \n");
 	    writeVariables();
 	    writeValueAssignations();
+	    writeSpecifications();
 	}
 
-	protected abstract void writeValueAssignations() throws IOException;
+
+	protected void writeValueAssignations() throws IOException {
+		writer.append("ASSIGN\n");
+		writer.append("\tinit(time) := 0; \n");	
+		generateInitialisations();
+		writer.append("\n");
+		for(int i=0;i<configs.getRepeat();i++) 
+			writeSTR(configs.getAntecedent_no(),i);
+		for(int i=0;i<configs.getRepeat();i++) 
+			writeNTR((configs.getAntecedent_no()*2)+1,i);
+		writer.append("\tnext(time) := case \r\n\t\t\t\t\t (time < "+configs.getMax_iteration()+") : time+1;\r\n\t\t\t\t\t TRUE : "+configs.getMax_iteration()+";\r\n\t\t\t\t  esac;\n");
+		
+	}
+
+
+	private void generateInitialisations() throws IOException {
+		for(int i=0;i<configs.getRepeat();i++) 
+			generateSTRVariableInitialisation(configs.getAntecedent_no(),i);
+		for(int i=0;i<configs.getRepeat();i++) 
+			generateNTRVariableInitialisation((configs.getAntecedent_no()*2)+1,i);
+		
+	}
+
+	private void generateSTRVariableInitialisation(int unit, int number) throws IOException {
+		writer.append("\tinit(state"+unit+"_"+number+"_aux) := FALSE;\n");	
+	}
+	
+	private void generateNTRVariableInitialisation(int unit, int number) throws IOException {
+		writer.append("\tinit(state"+unit+"_"+number+") := FALSE;\n");	
+	}
+
+
+	protected void writeVariables() throws IOException {
+		writer.append("VAR\n");
+		writer.append("\ttime : 0.."+configs.getMax_iteration()+"; \n\n");
+	    for(int i=0;i<configs.getRepeat();i++) 
+	    	writeStateVariables(i);
+	    writer.append("\n");
+	    for(int i=0;i<configs.getRepeat();i++) 
+	    	writeAuxiliaryStateVariables(i);
+	    writer.append("\n\n");
+	    for(int i=0;i<configs.getRepeat();i++) 
+	    	writeTemporalOperatorVariables(i);
+	    writer.append("\n\n");	
+		
+	}
+	
+	protected void writeSpecifications() throws IOException {
+		writer.append("\n-- Same Time Rules \n");
+		for(int i=0;i<configs.getRepeat()/2;i++) 
+			writeSTRSpecifications(configs.getAntecedent_no(),i);
+		writer.append("\n-- Next Time Rules \n");
+		for(int i=0;i<configs.getRepeat()/2;i++) 
+			writeNTRSpecifications((configs.getAntecedent_no()*2)+1,i);
+		writer.append("\n");
+	}
+
+	private void writeSTRSpecifications(int unit, int number) throws IOException {
+		writer.append("\tSPEC \n\t\tAG(");
+		for(int i=0; i < unit;i++){
+			if(i==0) 
+				writer.append("(state"+i+"_"+number+" = TRUE)");	
+			else writer.append(" & (state"+i+"_"+number+" = TRUE)");
+		}
+		writer.append(" -> (state"+unit+"_"+number+" = TRUE) )\n");
+	}
+	
+	private void writeNTRSpecifications(int unit, int number) throws IOException {
+		writer.append("\tSPEC \n\t\tAG(");
+		for(int i=configs.getAntecedent_no()+1; i < unit;i++){
+			if(i==(configs.getAntecedent_no()+1)) 
+				writer.append("(state"+i+"_"+number+" = TRUE)");	
+			else writer.append(" & (state"+i+"_"+number+" = TRUE)");
+		}
+		writer.append(" -> AX(state"+unit+"_"+number+" = TRUE) )\n");
+	}
 
 	protected void writeNTR(int unit, int number) throws IOException {
 		writer.append("\tnext(state"+unit+"_"+number+") := case\n");	
-		for(int i=antecedent_no+1; i < unit;i++){
-			if(i==(antecedent_no+1)) 
-				writer.append("\t\t\t\t\t\t(state"+i+"_"+number+" = "+getRandomStatus()+")");	
-			else writer.append(" & (state"+i+"_"+number+" = "+getRandomStatus()+")");
+		for(int i=configs.getAntecedent_no()+1; i < unit;i++){
+			if(i==(configs.getAntecedent_no()+1)) 
+				writer.append("\t\t\t\t\t\t(state"+i+"_"+number+" = TRUE)");	
+			else writer.append(" & (state"+i+"_"+number+" = TRUE)");
 		}
-		writer.append(": "+getRandomStatus()+";\n");
+		writer.append(": TRUE;\n");
 		writer.append("\t\t\t\t\t\tTRUE : state"+unit+"_"+number+";\n");
 		writer.append("\t\t\t\t    esac;\n\n");
 	}
@@ -103,30 +135,22 @@ public abstract class GenericGenerator {
 		writer.append("\tstate"+unit+"_"+number+" := case\n");	
 		for(int i=0; i < unit;i++){
 			if(i==0) 
-				writer.append("\t\t\t\t(state"+i+"_"+number+" = "+getRandomStatus()+")");	
-			else writer.append(" & (state"+i+"_"+number+" = "+getRandomStatus()+")");
+				writer.append("\t\t\t\t(state"+i+"_"+number+" = TRUE)");	
+			else writer.append(" & (state"+i+"_"+number+" = TRUE)");
 		}
-		writer.append(": "+getRandomStatus()+";\n");
+		writer.append(": TRUE;\n");
 		writer.append("\t\t\t\tTRUE : state"+unit+"_"+number+"_aux;\n");
 		writer.append("\t\t\t  esac;\n\n");
 		writer.append("\tnext(state"+unit+"_"+number+"_aux) := state"+unit+"_"+number+";\n\n");
-	}
-	
-	private String getRandomStatus(){
-		if(randomGenerator.nextBoolean()){
-			return "TRUE";
-		} else return "FALSE";
-	}
-
-	protected abstract void writeVariables() throws IOException;
+	}	
 
 	protected void writeTemporalOperatorVariables(int number) throws IOException {
 		int stateNumberCounter = 0;
 
-		stateNumberCounter = writeOperator("sip","strong_immediate_past",Integer.toString(immediate_operator_length), stateNumberCounter, number, sip_no);
-		stateNumberCounter = writeOperator("wip","weak_immediate_past",Integer.toString(immediate_operator_length), stateNumberCounter, number,  wip_no);
-		stateNumberCounter = writeOperator("sap","strong_absolute_past",absolute_operator_start+","+absolute_operator_end+",time", stateNumberCounter, number,  sap_no);	
-		writeOperator("wap","weak_absolute_past",absolute_operator_start+","+absolute_operator_end+",time", stateNumberCounter, number,  sap_no);	
+		stateNumberCounter = writeOperator("sip","strong_immediate_past",Integer.toString(configs.getImmediate_operator_length()), stateNumberCounter, number, configs.getSip_no());
+		stateNumberCounter = writeOperator("wip","weak_immediate_past",Integer.toString(configs.getImmediate_operator_length()), stateNumberCounter, number,  configs.getWip_no());
+		stateNumberCounter = writeOperator("sap","strong_absolute_past",configs.getAbsolute_operator_start()+","+configs.getAbsolute_operator_end()+",time", stateNumberCounter, number,  configs.getSap_no());	
+		writeOperator("wap","weak_absolute_past",configs.getAbsolute_operator_start()+","+configs.getAbsolute_operator_end()+",time", stateNumberCounter, number,  configs.getWap_no());	
 		writer.append("\n");
 	}
 
@@ -136,7 +160,7 @@ public abstract class GenericGenerator {
 		for(int i=0;i<operatorNumber;i++){
 		    writer.append("\t"+operatorName+i+"_"+number+" : "+operatorType+"(state"+auxStateNumberCounter+"_"+number+","+bound+"); \n");
 		
-			if(antecedent_no > auxStateNumberCounter) 
+			if(configs.getAntecedent_no() > auxStateNumberCounter) 
 				auxStateNumberCounter++;
 		}
 		return auxStateNumberCounter;
@@ -145,18 +169,18 @@ public abstract class GenericGenerator {
 
 
 	protected void writeStateVariables(int number) throws IOException {
-		for(int i=0;i<state_no;i++)
+		for(int i=0;i<configs.getState_no();i++)
 		    writer.append("\tstate"+i+"_"+number+" : boolean; \n");
-				
+		writer.append("\n");		
 	}
 	
 	protected void writeAuxiliaryStateVariables(int number) throws IOException {
-		int unit = antecedent_no;
-		while(unit < state_no){
+		int unit = configs.getAntecedent_no();
+		while(unit < configs.getState_no()){
 		    writer.append("\tstate"+unit+"_"+number+"_aux : boolean; \n");
-		    unit = unit + (antecedent_no+1);
+		    unit = unit + (configs.getAntecedent_no()+1);
 		}
-				
+		writer.append("\n");			
 	}
 	
 	private void writeStrongImmediatePastModule() throws IOException{
