@@ -1,0 +1,17 @@
+*.smv
+m2nusmv_evaluation/target/antrun
+m2nusmv_evaluation/target/archive-tmp
+m2nusmv_evaluation/target/classes
+m2nusmv_evaluation/target/lib
+m2nusmv_evaluation/target/maven-archiver
+m2nusmv_evaluation/target/apidocs/
+m2nusmv_evaluation/target/javadoc-bundle-options/
+m2nusmv_evaluation/target/maven-status/
+m2nusmv_evaluation/target/generated-sources/
+m2nusmv_evaluation/target/test-classes
+m2nusmv_evaluation/target/*.jar
+m2nusmv_evaluation/.settings
+m2nusmv_evaluation/src/test
+/sonar-project.properties
+/.sonar/
+/target/
