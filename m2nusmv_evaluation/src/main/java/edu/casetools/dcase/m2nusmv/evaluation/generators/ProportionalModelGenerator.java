@@ -1,3 +1,19 @@
+/*
+ * 	 This file is part of M2NuSMV_Evaluation.
+ *
+ *   M2NuSMV_Evaluation is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License.
+ *
+ *   M2NuSMV_Evaluation is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with M2NuSMV_Evaluation.  If not, see <http://www.gnu.org/licenses/>.
+ *   
+ */
 package edu.casetools.dcase.m2nusmv.evaluation.generators;
 import java.io.IOException;
 
@@ -16,11 +32,15 @@ public class ProportionalModelGenerator {
 	private Configurations configs;
 	private MData data;
 	private M2NuSMV translator;
+	private int strId;
+	private int ntrId;
 	
 	public ProportionalModelGenerator(Configurations configs) throws IOException{
 		this.configs = configs;
 		data = new MData();
-		translator = new M2NuSMV(configs.getFilename());
+		translator = new M2NuSMV();
+		strId = 0;
+		ntrId = 0;
 	}
 	
 	public void generate() throws IOException{
@@ -32,6 +52,7 @@ public class ProportionalModelGenerator {
 	private void generateData() throws IOException {
 		data = new MData();
 		data.setMaxIteration(configs.getMaxIteration());
+		data.setFilePath(configs.getFilename());
 	    generateStates();
 	    writeValueAssignations();
 	    writeSpecifications();
@@ -40,10 +61,15 @@ public class ProportionalModelGenerator {
 
 	protected void writeValueAssignations() throws IOException {
 
-		for(int i=0;i<configs.getRepeat();i++) 
-			data.getStrs().add(generateRule(configs.getAntecedentNo(),i,0));
-		for(int i=0;i<configs.getRepeat();i++) 
-			data.getNtrs().add(generateRule((configs.getAntecedentNo()*2)+1,i,configs.getAntecedentNo()+1));
+		for(int i=0;i<configs.getRepeat();i++) {
+			data.getStrs().add(generateRule(configs.getAntecedentNo(),i,0,strId));
+			strId++;
+		}
+		for(int i=0;i<configs.getRepeat();i++) {
+			data.getNtrs().add(generateRule((configs.getAntecedentNo()*2)+1,i,configs.getAntecedentNo()+1,ntrId));
+			ntrId++;
+		}
+		
 
 	}
 
@@ -101,8 +127,9 @@ public class ProportionalModelGenerator {
 	}
 
 
-	protected Rule generateRule(int unit, int number, int start) throws IOException {
+	protected Rule generateRule(int unit, int number, int start, int id) throws IOException {
 		Rule str = new Rule(); 
+		str.setId(Integer.toString(id));
 		for(int i=start; i < unit;i++){
 			RuleElement antecedent = new RuleElement();
 			antecedent.setName("state"+i+"_"+number);
