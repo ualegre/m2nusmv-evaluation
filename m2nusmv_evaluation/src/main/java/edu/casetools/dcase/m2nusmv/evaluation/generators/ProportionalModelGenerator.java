@@ -91,12 +91,12 @@ public class ProportionalModelGenerator {
 		
 		for(int i=0;i<configs.getRepeat()/2;i++) {
 			Specification spec = writeSTRSpecifications(configs.getAntecedentNo(),i);
-			data.getCtlSpecifications().add(spec);
+			data.getSpecifications().add(spec);
 		}
 
 
 		for(int i=0;i<configs.getRepeat()/2;i++) 
-			data.getCtlSpecifications().add(writeNTRSpecifications((configs.getAntecedentNo()*2)+1,i));
+			data.getSpecifications().add(writeNTRSpecifications((configs.getAntecedentNo()*2)+1,i));
 
 	}
 
