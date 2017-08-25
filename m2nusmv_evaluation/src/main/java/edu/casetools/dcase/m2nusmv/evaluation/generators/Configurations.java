@@ -36,7 +36,7 @@ public class Configurations {
 	private String filename;
 	
 	private void initialiseName() {
-		filename = "M_Proportional_Length"+repeat+"_State_"+(stateNo*repeat)+".smv";		
+		filename = "M_Proportional_Length"+repeat+"_State_"+(stateNo*repeat)+"_time_"+maxIteration+".smv";		
 	}
 	
 	public void printSetup() {

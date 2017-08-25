@@ -24,6 +24,7 @@ import edu.casetools.dcase.m2nusmv.data.elements.BoundedOperator.BOP_TYPE;
 import edu.casetools.dcase.m2nusmv.data.elements.Rule;
 import edu.casetools.dcase.m2nusmv.data.elements.RuleElement;
 import edu.casetools.dcase.m2nusmv.data.elements.Specification;
+import edu.casetools.dcase.m2nusmv.data.elements.Specification.TYPE;
 import edu.casetools.dcase.m2nusmv.data.elements.State;
 
 
@@ -102,6 +103,7 @@ public class ProportionalModelGenerator {
 
 	private Specification writeSTRSpecifications(int unit, int number) throws IOException {
 		Specification specification = new Specification();
+		specification.setId(Integer.toString(number));
 		String specificationText = "AG(";
 		for(int i=0; i < unit;i++){
 			if(i==0) 
@@ -110,11 +112,13 @@ public class ProportionalModelGenerator {
 		}
 		specificationText = specificationText + " -> (state"+unit+"_"+number+" = TRUE) )\n";
 		specification.setSpec(specificationText);
+		specification.setType(TYPE.CTL);
 		return specification;
 	}
 	
 	private Specification writeNTRSpecifications(int unit, int number) throws IOException {
 		Specification specification = new Specification();
+		specification.setId(Integer.toString(number));
 		String specificationText = "AG(";
 		for(int i=configs.getAntecedentNo()+1; i < unit;i++){
 			if(i==(configs.getAntecedentNo()+1)) 
@@ -123,6 +127,7 @@ public class ProportionalModelGenerator {
 		}
 		specificationText = specificationText + " -> AX(state"+unit+"_"+number+" = TRUE) )\n";
 		specification.setSpec(specificationText);
+		specification.setType(TYPE.CTL);
 		return specification;
 	}
 
