@@ -165,14 +165,6 @@ public class Configurations {
 		this.absoluteOperatorEnd = absoluteOperatorEnd;
 	}
 
-	public int getMaxUppBound() {
-		return maxUppBound;
-	}
-
-	public void setMaxUppBound(int maxUppBound) {
-		this.maxUppBound = maxUppBound;
-	}
-
 	public int getMaxIteration() {
 		return maxIteration;
 	}
