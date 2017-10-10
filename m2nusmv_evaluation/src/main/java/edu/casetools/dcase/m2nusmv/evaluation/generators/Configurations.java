@@ -31,7 +31,6 @@ public class Configurations {
 	private int absoluteOperatorStart;
 	private int absoluteOperatorLength;
 	private int absoluteOperatorEnd;
-	private int maxUppBound;
 	private int maxIteration; 
 	private String filename;
 	

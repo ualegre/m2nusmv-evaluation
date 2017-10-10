@@ -41,7 +41,6 @@ public class Main {
 							configs.setAbsoluteOperatorStart(5);
 							configs.setAbsoluteOperatorLength(5);
 							configs.setAbsoluteOperatorEnd(configs.getAbsoluteOperatorStart()+configs.getAbsoluteOperatorLength());
-							configs.setMaxUppBound(5);
 							configs.setMaxIteration(10000000);
 							configs.printSetup();
 
